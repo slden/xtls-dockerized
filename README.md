@@ -1,7 +1,7 @@
 # xtls-dockerized
 
 ## Initialization
-If not already, install docker and docker-compose using below commands:
+If not already, install docker using below commands:
 ```bash
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh

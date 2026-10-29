@@ -6,7 +6,7 @@ domain.com {
     header Upgrade websocket
   }
 
-  reverse_proxy @websockets xray:443 
+  reverse_proxy @websockets http://xray:8080 
 
   # file_server browse
   # root * /srv
