@@ -9,8 +9,7 @@
             "settings": {
                 "clients": [
                     {
-                        "id": "11111111-1111-1111-1111-35e863d1c6c8", 
-                        "flow": "xtls-rprx-direct",
+                        "id": "11111111-1111-1111-1111-35e863d1c6c8",
                         "level": 0,
                         "email": "a@b.c"
                     }

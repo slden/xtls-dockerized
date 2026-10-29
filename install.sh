@@ -23,7 +23,8 @@ Precheck() {
 		if [ ! -e $file ]; then
 			case "${file}" in
 			"Caddyfile" | "xray/config.json" | "docker-compose.yml")
-				curl -sO "https://raw.githubusercontent.com/Arman92/xtls-dockerized/main/${file}"
+				mkdir -p "$(dirname "$file")"
+				curl -fsSL "https://raw.githubusercontent.com/slden/xtls-dockerized/main/${file}" -o "$file"
 				;;
 			".settings")
 				touch $file
@@ -33,7 +34,7 @@ Precheck() {
 		fi
 	done
 
-	curl -sO "https://raw.githubusercontent.com/Arman92/xtls-dockerized/main/decoy-website.tar.gz"
+	curl -fsSL "https://raw.githubusercontent.com/slden/xtls-dockerized/main/decoy-website.tar.gz" -o ./decoy-website.tar.gz
 	mkdir site
 	tar -zxf ./decoy-website.tar.gz -C site
 	mv site/decoy-website/* site/
@@ -124,7 +125,7 @@ ChangeUUID() {
 		case "${setUUID}" in
 		'y' | 'Y')
 			UUIDN1=$(curl -s https://www.uuidgenerator.net/api/version4)
-			sed -i -E "s|\w{8}(-\w{4}){3}-\w{12}\"|$UUIDN1\"|g" ./config.json
+			sed -i -E "s|\w{8}(-\w{4}){3}-\w{12}\"|$UUIDN1\"|g" ./xray/config.json
 			ChangeSettings "UUID" "$UUIDN1"
 			;;
 		*) ;;
@@ -132,7 +133,7 @@ ChangeUUID() {
 		;;
 	*)
 		UUIDN1=$(curl -s https://www.uuidgenerator.net/api/version4)
-		sed -i -E "s|\w{8}(-\w{4}){3}-\w{12}\"|$UUIDN1\"|g" ./config.json
+		sed -i -E "s|\w{8}(-\w{4}){3}-\w{12}\"|$UUIDN1\"|g" ./xray/config.json
 		ChangeSettings "UUID" "$UUIDN1"
 		echo -e "Changed the UUID in configs to a random one: \n\t\"$UUIDN1\""
 
@@ -148,42 +149,19 @@ ChangeUUID() {
 		echo "Vmess TCP path: /$vmess_tcp_path"
 		echo "Vless WS path: /$vmess_ws_path"
 
-		sed -i -E "s|/vless-ws-path\"|/$vless_ws_path\"|g" ./config.json
-		sed -i -E "s|/vmess-tcp-path\"|/$vmess_tcp_path\"|g" ./config.json
-		sed -i -E "s|/vmess-ws-path\"|/$vmess_ws_path\"|g" ./config.json
+		sed -i -E "s|/vless-ws-path\"|/$vless_ws_path\"|g" ./xray/config.json
+		sed -i -E "s|/vmess-tcp-path\"|/$vmess_tcp_path\"|g" ./xray/config.json
+		sed -i -E "s|/vmess-ws-path\"|/$vmess_ws_path\"|g" ./xray/config.json
 
 		;;
 	esac
 }
 
 ChangeFlow() {
-	CurrentFlowTpe=$(grep FLOW .settings | awk -F= '{print $2}')
-	if [ -z "$CurrentFlowTpe" ]; then
-		CurrentFlowTpe=$(grep 'flow' config.json | awk -F'"' '{print $4}')
-		ChangeSettings "FLOW" $CurrentFlowTpe
-	fi
-	read -p "Current flow control is $CurrentFlowTpe, want to change it?(y or N def N)" ChangeFlowType
-	case "${ChangeFlowType}" in
-	'y' | 'Y')
-		echo -e "Select the new flow control method(def 2):\n1.xtls-rprx-origin\n2.xtls-rprx-direct\n3.xtls-rprx-splice(Linux only)"
-		read FlowType
-		case "${FlowType}" in
-		1)
-			sed -i "s|$CurrentFlowTpe|xtls-rprx-origin|g" config.json
-			ChangeSettings "FLOW" "xtls-rprx-origin"
-			;;
-		3)
-			sed -i "s|$CurrentFlowTpe|xtls-rprx-splice|g" config.json
-			ChangeSettings "FLOW" "xtls-rprx-splice"
-			;;
-		*)
-			sed -i "s|$CurrentFlowTpe|xtls-rprx-direct|g" config.json
-			ChangeSettings "FLOW" "xtls-rprx-direct"
-			;;
-		esac
-		;;
-	esac
-
+	# Xray 1.8+ rejects xtls-rprx-direct/origin/splice.
+	# TLS is terminated by Caddy; the published links are VLESS/VMESS over WS and do not use flow.
+	sed -i '/"flow":/d' xray/config.json
+	ChangeSettings "FLOW" ""
 }
 
 ExposeSettingsValues() {

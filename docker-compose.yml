@@ -3,7 +3,7 @@ version: "3.7"
 services:
   caddy:
     container_name: caddy-server
-    image: caddy:2-alpine
+    image: caddy:2.11.7-alpine
     restart: unless-stopped
     ports:
       - "80:80"
@@ -16,7 +16,7 @@ services:
       - ./caddy_config:/config
 
   xray:
-      image: teddysun/xray:1.6.2
+      image: teddysun/xray:26.10.21
       user: root
     #   network_mode: host
       restart: always
@@ -25,7 +25,8 @@ services:
           options:
               max-size: "10M"
       volumes:
-          - ./config.json:/etc/xray/config.json
+          # Mount the directory. VOLUME /etc/xray in the image hides a single-file bind of config.json.
+          - ./xray:/etc/xray
           - ./caddy_data/caddy/certificates/acme-v02.api.letsencrypt.org-directory:/etc/certs
       environment:
           - xray.vmess.aead.forced=false
